@@ -3,9 +3,12 @@
 library(ANTsR)
 library(knitr)
 
-#setwd( '/Users/alex/GitHub/adforesight' )
-setwd( '/Users/omega/alex/adforesight' )
-output.path <- '/Users/omega/alex/adforesight/mydata/outdata/sd2_projall_noscale/'
+setwd( '/Users/alex/GitHub/adforesight' )
+output.path <- '/Users/alex/GitHub/adforesight/mydata/outdata/sd2_projall_noscale/'
+#setwd( '/Users/omega/alex/adforesight' )
+#output.path <- '/Users/omega/alex/adforesight/mydata/outdata/sd2_projall_noscale/'
+
+
 if (dir.exists(output.path)){ 1} else {dir.create(output.path, recursive=TRUE)}
 
 # Load in Behavior and Imaging Data
@@ -62,6 +65,7 @@ j=1
   imgmat_jac<-imageListToMatrix( eanat_region_jac$eig1 , mask )
   imgmat_mang<-imageListToMatrix( eanat_region_mang$eig1 , mask )
   imgmat_sus<-imageListToMatrix( eanat_region_suscept$eig1, mask )
+  
   imgpredtrain_jac<-jac.train %*% t(imgmat_jac)
   imgpredtest_jac<-jac.test %*% t(imgmat_jac)
   imgpredtrain_mang<-mang.train %*% t(imgmat_mang)
