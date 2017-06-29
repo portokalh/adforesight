@@ -7,7 +7,7 @@ output.path <- '/Users/alex/GitHub/adforesight/mydata/outdata/sd2_projall_noscal
 #output.path <- '/Users/omega/alex/adforesight/mydata/outdata/sd2_projall_noscale/'
 
 
-behavior <- read.csv("/Users/omega/Documents/Natalie/SCCAN_tutorial/Eig_zscore/data/All_Behavior.csv")
+behavior <- read.csv("./mydata/All_Behavior.csv")
 adind <-c(1,2,8,9,10,12,13,14,15,16,19)
 conind<-c(3,4,5,6,7,11,17,18,20,21,22,23,24)
 ad_behavior <-behavior[adind,]
@@ -16,7 +16,8 @@ con_behavior <-behavior[conind,]
 #figure 1 Swim Distance, Swim time, swim velocity
 a <- c(0.6,1.6,2.6,3.6,4.6)
 b<-a-.1
-png(filename = '/Users/omega/Documents/Natalie/Thesis/Figures/figures_boxplots/Swim_Distance_ConvsNOS2_slope.png')
+#png(filename = '/Users/omega/Documents/Natalie/Thesis/Figures/figures_boxplots/Swim_Distance_ConvsNOS2_slope.png')
+png(filename = '/mydata/out_Swim_Distance_ConvsNOS2_slope.png')
 ad_dist <-ad_behavior[, c(2:6)]
 cd_dist <-con_behavior[, c(2:6)]
 time <-1:5
@@ -40,7 +41,8 @@ legend("bottomleft", title = 'Genotype', legend = c('NOS2', 'CVN'), fill=c('blac
 dev.off()
 
 
-png(filename = '/Users/omega/Documents/Natalie/Thesis/Figures/figures_boxplots/Swim_Time_ConvsNOS2_slope.png')
+#png(filename = '/Users/omega/Documents/Natalie/Thesis/Figures/figures_boxplots/Swim_Time_ConvsNOS2_slope.png')
+png(filename = '/mydata/out_Swim_Time_ConvsNOS2_slope.png')
 ad_time <-ad_behavior[, c(7:11)]
 cd_time <-con_behavior[, c(7:11)]
 boxplot(ad_time, ylab = 'Swim Time (sec)', border="red", boxwex = 0.35, outline = T, ylim= c(0,70))
@@ -62,7 +64,8 @@ abline(lm(med_cdtimes~time), lty =  1 , lwd = 2 , col = 'black')
 legend("bottomleft", title = 'Genotype', legend = c('NOS2', 'CVN'), fill=c('black','red'), horiz=TRUE)
 dev.off()
 
-png(filename = '/Users/omega/Documents/Natalie/Thesis/Figures/figures_boxplots/Swim_Velocity_ConvsNOS2_slope.png')
+#png(filename = '/Users/omega/Documents/Natalie/Thesis/Figures/figures_boxplots/Swim_Velocity_ConvsNOS2_slope.png')
+png(filename = '/mydata/out_Swim_Velocity_ConvsNOS2_slope.png')
 ad_vel <-ad_behavior[, c(12:16)]
 cd_vel <-con_behavior[, c(12:16)]
 boxplot(ad_vel, ylab = 'Swim Velocity (cm/sec)', border="red", boxwex = 0.35, outline = T,ylim = c(10,25))
