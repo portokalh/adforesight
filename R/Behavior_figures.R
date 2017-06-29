@@ -17,7 +17,7 @@ con_behavior <-behavior[conind,]
 a <- c(0.6,1.6,2.6,3.6,4.6)
 b<-a-.1
 #png(filename = '/Users/omega/Documents/Natalie/Thesis/Figures/figures_boxplots/Swim_Distance_ConvsNOS2_slope.png')
-png(filename = .'/mydata/out_Swim_Distance_ConvsNOS2_slope.png')
+png(filename = './mydata/out_Swim_Distance_ConvsNOS2_slope.png')
 ad_dist <-ad_behavior[, c(2:6)]
 cd_dist <-con_behavior[, c(2:6)]
 time <-1:5
