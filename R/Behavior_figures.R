@@ -17,7 +17,7 @@ con_behavior <-behavior[conind,]
 a <- c(0.6,1.6,2.6,3.6,4.6)
 b<-a-.1
 #png(filename = '/Users/omega/Documents/Natalie/Thesis/Figures/figures_boxplots/Swim_Distance_ConvsNOS2_slope.png')
-png(filename = '/mydata/out_Swim_Distance_ConvsNOS2_slope.png')
+png(filename = .'/mydata/out_Swim_Distance_ConvsNOS2_slope.png')
 ad_dist <-ad_behavior[, c(2:6)]
 cd_dist <-con_behavior[, c(2:6)]
 time <-1:5
@@ -42,7 +42,7 @@ dev.off()
 
 
 #png(filename = '/Users/omega/Documents/Natalie/Thesis/Figures/figures_boxplots/Swim_Time_ConvsNOS2_slope.png')
-png(filename = '/mydata/out_Swim_Time_ConvsNOS2_slope.png')
+png(filename = './mydata/out_Swim_Time_ConvsNOS2_slope.png')
 ad_time <-ad_behavior[, c(7:11)]
 cd_time <-con_behavior[, c(7:11)]
 boxplot(ad_time, ylab = 'Swim Time (sec)', border="red", boxwex = 0.35, outline = T, ylim= c(0,70))
@@ -65,7 +65,7 @@ legend("bottomleft", title = 'Genotype', legend = c('NOS2', 'CVN'), fill=c('blac
 dev.off()
 
 #png(filename = '/Users/omega/Documents/Natalie/Thesis/Figures/figures_boxplots/Swim_Velocity_ConvsNOS2_slope.png')
-png(filename = '/mydata/out_Swim_Velocity_ConvsNOS2_slope.png')
+png(filename = './mydata/out_Swim_Velocity_ConvsNOS2_slope.png')
 ad_vel <-ad_behavior[, c(12:16)]
 cd_vel <-con_behavior[, c(12:16)]
 boxplot(ad_vel, ylab = 'Swim Velocity (cm/sec)', border="red", boxwex = 0.35, outline = T,ylim = c(10,25))
