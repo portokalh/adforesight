@@ -35,7 +35,7 @@ suscept.test <- suscept_mat[rows.test, ]
 behav.train <- behavior[rows.train, ]
 behav.test <-behavior[rows.test, ]
 #name labels
-label.ind <- c(19,20,42,47,51,54,57,59,62,63,64,65,73,81,83,91,118,120,122)
+label.ind <- c(19,20,42,47,51,54,57,59,62,63,64,65,73,81,83,91,119,121,123)
 
 j=1
 
