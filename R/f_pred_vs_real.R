@@ -23,11 +23,12 @@ mang.test <- mang_mat[rows.test, ]
 behav.train <- behavior[rows.train, ]
 behav.test <-behavior[rows.test, ]
 
-label.ind <- c(19,20,42,47,51,54,57,59,62,63,64,65,73,81,83,91,118,120,122)
+label.ind <- c(19,20,42,47,51,54,57,59,62,63,64,65,73,81,83,91,119,121,123)
 
 #Both (Left and Right) ROIS
 
-for ( j in 1:length(label.ind)){
+
+for ( j in 1:length(label.ind)) {
   labels<-c(label.ind[j],label.ind[j]+1000)
   initmat<-matrix( rep(0,sum(mask==1)*length(labels)), nrow=length(labels) )
   output.file <- paste(output.path, as.character(labled.set$Abbreviation[label.ind[j]]),'LR_all.png',sep = "_")
@@ -39,21 +40,25 @@ for ( j in 1:length(label.ind)){
   newmat <- as.matrix(colSums(initmat))
   newmat <- t(newmat)
   ccainit<-initializeEigenanatomy(newmat,mask)
-
+  
   dist4.train <-behav.train[,'d4']
   dist4.test  <-behav.test[,'d4']
   behav.matrix <-as.matrix(dist4.train)
   eanat_region_mang<-sparseDecom2(inmatrix = list(mang.train,behav.matrix), inmask = c(mask, NA), sparseness = c(0.01,1),
                                   nvecs = 1, its = 10, cthresh = c(100, 0), mycoption = 0, smooth = 0.01,
                                   initializationList = ccainit$initlist,priorWeight = 0.5)
-
-  useeig_mang <- imageListToMatrix( eanat_region_mang$eig1 , mask )
-  myproj_mang <-mang.test %*% t(useeig_mang)
-  myproj_behavior_mang <-dist4.test %*% as.matrix(eanat_region_mang$eig2)
-  imaging <- myproj_mang[ , 1]
-  cognition <- myproj_behavior_mang[ ,1]
-  myform <- as.formula('cognition ~ imaging')
-  modsum <-summary(lm(myform))
+  
+  imgmat_mang<-imageListToMatrix( eanat_region_mang$eig1 , mask )
+  imgpredtrain_mang<-mang.train %*% t(imgmat_mang)
+  imgpredtest_mang<-mang.test %*% t(imgmat_mang)
+ 
+  projs.train <- data.frame(cbind(dist4.train, imgpredtrain_mang)) # column combind the behavior wth the projections
+  colnames(projs.train) <- c('Dist_4','Mang') # insert column names
+  projs.test <- data.frame(cbind(dist4.test, imgpredtest_mang)) # column combind the behavior wth the projections
+  colnames(projs.test) <- c('Dist_4','Mang') # insert column names
+  mylm <- lm('Dist_4 ~ .', data=projs.train) # behavior correlation with the number of projections
+  distpred <- predict.lm(mylm, newdata=projs.test) # based on the linear model predict the distances for the same day
+  modsum <-summary(lm(distpred~dist4.test))
   r2 <- modsum$adj.r.squared
   my.p <- modsum$coefficients[2,4]
   png(filename = output.file, width = 556, height = 579,units = "px")
@@ -66,5 +71,3 @@ for ( j in 1:length(label.ind)){
   legend('top', legend = rp, bty = 'n')
   dev.off()
 }
-
-brain<-renderSurfaceFunction( surfimg =list(labeled.brain.img ) , funcimg=eanat_region_suscept$eig1, smoothsval=0, alphasurf=0.1,smoothfval=0)

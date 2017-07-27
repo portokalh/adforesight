@@ -39,6 +39,8 @@ projs.train <- data.frame(cbind(dist4.train,imgmat_train_mang)) # column combine
 colnames(projs.train) <- c('Dist_4', paste0('Proj', c(1:ncol(imgmat_train_mang)))) # insert column names
 projs.test <- data.frame(cbind(dist4.test,imgmat_test_mang)) # column combine the behavior wth the projections
 colnames(projs.test) <- c('Dist_4', paste0('Proj', c(1:ncol(imgmat_test_mang)))) # insert column names
+
+
 mylm <- lm('Dist_4 ~ .', data=projs.train) # behavior correlation with the number of projections
 distpred <- predict.lm(mylm, newdata=projs.test) # based on the linear model predict the distances for the same day
 modsum <-summary(lm(distpred~dist4.test))

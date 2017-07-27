@@ -86,3 +86,37 @@ med_cdvels<-c(med_cdvel1,med_cdvel2,med_cdvel3,med_cdvel4,med_cdvel5)
 abline(lm(med_cdvels~time), lty =  1 , lwd = 2 , col = 'black')
 legend("bottomleft", title = 'Genotype', legend = c('NOS2', 'CVN'), fill=c('black','red'), horiz=TRUE)
 dev.off()
+
+###STATS####
+#SWIM DISTANCE
+t.test(ad_dist[ ,1],cd_dist[ ,1])
+t.test(ad_dist[ ,2],cd_dist[ ,2])
+t.test(ad_dist[ ,3],cd_dist[ ,3])
+t.test(ad_dist[ ,4],cd_dist[ ,4])
+t.test(ad_dist[ ,5],cd_dist[ ,5])
+
+#SWIM TIME
+t.test(ad_time[ ,1],cd_time[ ,1])
+t.test(ad_time[ ,2],cd_time[ ,2])
+t.test(ad_time[ ,3],cd_time[ ,3])
+t.test(ad_time[ ,4],cd_time[ ,4])
+t.test(ad_time[ ,5],cd_time[ ,5])
+
+#SWIM VELOCITY
+t.test(ad_vel[ ,1],cd_vel[ ,1])
+t.test(ad_vel[ ,2],cd_vel[ ,2])
+t.test(ad_vel[ ,3],cd_vel[ ,3])
+t.test(ad_vel[ ,4],cd_vel[ ,4])
+t.test(ad_vel[ ,5],cd_vel[ ,5])
+
+#PROBES-PERCENTAGE IN ZONE
+t.test(ad_prox33,cd_prox33)
+t.test(ad_prox5,cd_prox5)
+
+#PROBES-TOTAL DISTANCE TO TARGET ZONE
+t.test(ad_dist33,cd_dist33)
+t.test(ad_dist5,cd_dist5)
+
+#NUMBER OF ENTRIES IN ZONE
+t.test(ad_entry33,cd_entry33)
+t.test(ad_entry5,cd_entry5)
