@@ -9,7 +9,7 @@ manganese_t1 <- read.csv(file="All_BehaviorChiMn.csv",head=TRUE,sep=",")
 #T1w<-manganese_t1$MnOriMean
 #genotype<-manganese_t1$$genotype
 
-T1wMnGenotype_t<-t.test(MnOriMean~genotype,data=manganese_t1,alternative="greater")
+T1wMnGenotype_t<-t.test(MnOriMean~genotype,data=manganese_t1,alternative="two.sided")
 QSMGlobal_t<-t.test(chi~genotype,data=manganese_t1)
 T1wMnSex_t<-t.test(MnOriMean~sex,data=manganese_t1)
 QSMSex_t<-t.test(chi~sex,data=manganese_t1)
@@ -36,9 +36,3 @@ boxplot(chi~sex,data=manganese_t1, main="QSM Brain", col=(c("white","red")),
 dev.off()
 
 
-
-
-
-
-# Add a title
-#title("Crime rate vs. radial highway index")
