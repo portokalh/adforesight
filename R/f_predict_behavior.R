@@ -1,4 +1,4 @@
-#Predicting Cognitive Battery
+#Predicting Cognition
 
 library( knitr )
 library(ANTsR)
@@ -41,10 +41,7 @@ reportAnatomy<-function( eigIn, maskIn, wt=0.3)
   return( toString(roi.guide$Abbreviation[rois] ) )
 }
 
-# Try to predict all the demographic variability from the imaging data. We use
-# `mycoption 0` to try to reduce correlation in low-dimensional space. This
-# enforces a new SCCAN constraint (not previously reported). (Nick: We've been
-# using mycoption = 0 this whole time.)
+
 behav.train.mat<- as.matrix( behav.train[,c(2:16)] )
 behav.test.mat<- as.matrix( behav.test[,c(2:16)] )
 cognitiveSccanResult <- sparseDecom2(inmatrix = list (mang.train,behav.train.mat),its = 10, mycoption = 0, sparseness = c( 0.03, 0.05 ), nvecs = 11,
