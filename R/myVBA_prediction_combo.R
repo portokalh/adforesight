@@ -1,8 +1,11 @@
 library( knitr )
 library(ANTsR)
-library(ANTsRCore)
+library(visreg)
+library(robustbase)
+library(groupdata2) 
+library(ggplot2)
 library(caret)
-library(broom)
+require(broom)
 
 #[18,num vox]  * [numvox,nvecs]
 # Load in Behavior and Imaging Data
@@ -13,11 +16,11 @@ mypath<-'/Users/alex/Documents/GitHub/adforesight/' #flavors of ithaka
 
 setwd(mypath)
 mysuffix<-'jac'
-mysuffix<-'Mn'
-mysuffix<-'chi'
+#mysuffix<-'Mn'
+#mysuffix<-'chi'
 
-ncolcombo<-1 #for one regions
-extension<-paste('VBA_',mysuffix,'_neg_pred',sep='')
+ncolcombo<-2 #for pos and negative clusters
+extension<-paste('VBA_',mysuffix,'_posneg_pred',sep='')
 output.path <- paste(mypath,'/mydata/outdata/',extension, '/', sep='') #sd2_projall_noscale/'
 vbainput.path<-'/Users/alex/Documents/GitHub/adforesight/mydata/vba/' #flavors of ithaka
 vbainput.path<-'/Users/alex/brain_data/MEMRI_CVN_NOS/MEMRI_VBA/' #flavors of serifos
@@ -60,32 +63,45 @@ mask <- thresholdImage( mask, 0.1, Inf )
 #reading the positive and negative clusters rom vba
 mask_pos_jac <- antsImageRead(paste('./mydata/vba/jac_pos.nii', sep = ''))
 mask_neg_jac <- antsImageRead(paste('./mydata/vba/jac_neg.nii', sep = ''))
+mask_jac<-mask_pos_jac+mask_neg_jac
+
 mask_pos_Mn <- antsImageRead(paste('./mydata/vba/Mn_pos.nii', sep = ''))
 mask_neg_Mn <- antsImageRead(paste('./mydata/vba/Mn_neg.nii', sep = ''))
+mask_Mn<-mask_pos_Mn+mask_neg_Mn
+
 mask_pos_chi <- antsImageRead(paste('./mydata/vba/chi_pos.nii', sep = ''))
 mask_neg_chi <- antsImageRead(paste('./mydata/vba/chi_neg.nii', sep = ''))
+mask_chi<-mask_pos_chi+mask_neg_chi
+
 
 mask_pos_jac<-thresholdImage( mask_pos_jac, 0.0001, Inf )
 mask_neg_jac<-thresholdImage( mask_neg_jac, 0.0001, Inf )
+mask_jac<-thresholdImage( mask_jac, 0.0001, Inf )
 mask_pos_Mn<-thresholdImage( mask_pos_Mn, 0.0001, Inf )
 mask_neg_Mn<-thresholdImage( (mask_neg_Mn), 0.0001, Inf )
+mask_Mn<-thresholdImage( mask_Mn, 0.0001, Inf )
 mask_pos_chi<-thresholdImage( mask_pos_chi, 0.0001, Inf )
 mask_neg_chi<-thresholdImage( mask_neg_chi, 0.0001, Inf )
+mask_chi<-thresholdImage( mask_chi, 0.0001, Inf )
 #plot(mytemplate, list(mask_neg_chi))
 #plot(mytemplate, list(mask_pos_chi))
 ###
 antsImageWrite(mask_pos_jac,paste('./mydata/vba/mask_pos_jac.nii', sep = ''))
 antsImageWrite(mask_neg_jac,paste('./mydata/vba/mask_neg_jac.nii', sep = ''))
+antsImageWrite(mask_jac,paste('./mydata/vba/mask_jac.nii', sep = ''))
 antsImageWrite(mask_pos_Mn,paste('./mydata/vba/mask_pos_Mn.nii', sep = ''))
 antsImageWrite(mask_neg_Mn,paste('./mydata/vba/mask_neg_Mn.nii', sep = ''))
+antsImageWrite(mask_Mn,paste('./mydata/vba/mask_Mn.nii', sep = ''))
 antsImageWrite(mask_pos_chi,paste('./mydata/vba/mask_pos_chi.nii', sep = ''))
 antsImageWrite(mask_neg_chi,paste('./mydata/vba/mask_neg_chi.nii', sep = ''))
-
+antsImageWrite(mask_chi,paste('./mydata/vba/mask_chi.nii', sep = ''))
 
 mang_files <- list.files(path = "./mydata/imdata/", pattern = "T2_to_MDT",full.names = T,recursive = T)
 pos_Mn<- imagesToMatrix(mang_files,mask_pos_Mn)
 neg_Mn<- imagesToMatrix(mang_files,mask_neg_Mn)
 mask_combo_Mn<-imageListToMatrix(list(mask_pos_Mn,mask_neg_Mn),mask = mask)
+#paranoid check
+all_Mn<-imagesToMatrix(mang_files,mask_Mn)
 #sanity check
 #plot(mytemplate, list(mask_pos_Mn,mask_neg_Mn))
 
@@ -93,6 +109,7 @@ jac_files <- list.files(path = "./mydata/imdata/", pattern = "jac_to_MDT",full.n
 pos_jac<- imagesToMatrix(jac_files,mask_pos_jac)
 neg_jac<- imagesToMatrix(jac_files,mask_neg_jac)
 mask_combo_jac<-imageListToMatrix(list(mask_pos_jac,mask_neg_jac),mask = mask)
+all_jac<-imagesToMatrix(jac_files,mask_jac)
 #sanity check
 #plot(mytemplate, list(mask_pos_jac,mask_neg_jac))
 
@@ -100,6 +117,7 @@ chi_files <- list.files(path = "./mydata/imdata/", pattern = "X_to_MDT",full.nam
 pos_chi<- imagesToMatrix(chi_files,mask_pos_chi)
 neg_chi<- imagesToMatrix(chi_files,mask_neg_chi)
 mask_combo_chi<-imageListToMatrix(list(mask_pos_chi,mask_neg_chi),mask = mask)
+all_chi<-imagesToMatrix(chi_files,mask_chi)
 #sanity check
 #plot(mytemplate, list(mask_pos_chi,mask_neg_chi))
 
@@ -127,27 +145,34 @@ res_test<-createFolds(behavior$genotype,k)
 #alex gotta flex and change this
 if (mysuffix=='jac') {
   myfiles <- jac_files
-  mymask<-mask_pos_jac
-  mymask<-mask_neg_jac
-  mymat <- imagesToMatrix(myfiles,mymask)
-  myregion1<-pos_jac
-  myregion1<-neg_jac
-  mymask2<-as.matrix(colMeans(myregion1))/colMeans(myregion1)
+  mymask_pos<-mask_pos_jac
+  mymask_neg<-mask_neg_jac
+  mymat_pos <- imagesToMatrix(myfiles,mymask_pos)
+  mymat_neg <- imagesToMatrix(myfiles,mymask_neg)
+  myregion_pos<-pos_jac
+  myregion_neg<-neg_jac
+  mymask2_pos<-as.matrix(colMeans(myregion_pos))/colMeans(myregion_pos)
+  mymask2_neg<-as.matrix(colMeans(myregion_neg))/colMeans(myregion_neg)
 } else if (mysuffix=='Mn'){
   myfiles <- mang_files
-  mymask<-mask_pos_Mn
-  mymask<-mask_neg_Mn
-  mymat <- imagesToMatrix(myfiles,mymask)
-  myregion1<-neg_Mn
-  mymask2<-as.matrix(colMeans(myregion1))/colMeans(myregion1)
+  mymask_pos<-mask_pos_Mn
+  mymask_neg<-mask_neg_Mn
+  mymat_pos <- imagesToMatrix(myfiles,mymask_pos)
+  mymat_neg <- imagesToMatrix(myfiles,mymask_neg)
+  myregion_pos<-pos_Mn
+  myregion_neg<-neg_Mn
+  mymask2_pos<-as.matrix(colMeans(myregion_pos))/colMeans(myregion_pos)
+  mymask2_neg<-as.matrix(colMeans(myregion_neg))/colMeans(myregion_neg)
 }else if (mysuffix=='chi'){
   myfiles <- chi_files
-  mymask<-mask_pos_chi
-  mymask<-mask_neg_chi
-  mymat <- imagesToMatrix(myfiles,mymask)
-  myregion1<-pos_chi
-  myregion1<-neg_chi
-  mymask2<-as.matrix(colMeans(myregion1))/colMeans(myregion1)
+  mymask_pos<-mask_pos_chi
+  mymask_neg<-mask_neg_chi
+  mymat_pos <- imagesToMatrix(myfiles,mymask_pos)
+  mymat_neg <- imagesToMatrix(myfiles,mymask_neg)
+  myregion_pos<-pos_chi
+  myregion_neg<-neg_chi
+  mymask2_pos<-as.matrix(colMeans(myregion_pos))/colMeans(myregion_pos)
+  mymask2_neg<-as.matrix(colMeans(myregion_neg))/colMeans(myregion_neg)
 }else {print('all hell break loose')}
 
 for (myfold in 1:k){
@@ -160,11 +185,16 @@ for (myfold in 1:k){
   rows.test<-as.integer(unlist(res_test[myfold]))
   
   #pos clusters only
-  mang.train <- mymat[rows.train, ]
-  mang.test <- mymat[rows.test, ]
+  mang_pos.train <- mymat_pos[rows.train, ]
+  mang_neg.train <- mymat_neg[rows.train, ]
+  mang_pos.test <- mymat_pos[rows.test, ]
+  mang_neg.test <- mymat_neg[rows.test, ]
   
-  imgpredtrain_mang<-mang.train  %*% mymask2 #gives NA
-  imgpredtest_mang<-mang.test  %*% mymask2 #gives NA
+  imgpredtrain_mang_pos<-mang_pos.train  %*% mymask2_pos #gives NA
+  imgpredtrain_mang_neg<-mang_neg.train  %*% mymask2_neg #gives NA
+  
+  imgpredtest_mang_pos<-mang_pos.test  %*% mymask2_pos #gives NA
+  imgpredtest_mang_neg<-mang_neg.test  %*% mymask2_neg #gives NA
   
   behav.train <- behavior[rows.train, ]
   behav.test  <- behavior[rows.test, ]
@@ -172,10 +202,10 @@ for (myfold in 1:k){
   dist4.test <- behav.test[,'d4'] 
   
   
-  projs.train <- data.frame(cbind(dist4.train,imgpredtrain_mang)) # column combine the behavior wth the projections
-  colnames(projs.train) <- c('Dist_4', paste0('Proj', c(1:ncol(imgpredtrain_mang)))) # insert column names
-  projs.test <- data.frame(cbind(dist4.test,imgpredtest_mang)) # column combine the behavior wth the projections
-  colnames(projs.test) <- c('Dist_4', paste0('Proj', c(1:ncol(imgpredtest_mang)))) # insert column names
+  projs.train <- data.frame(cbind(dist4.train,imgpredtrain_mang_pos,imgpredtrain_mang_neg)) # column combine the behavior wth the projections
+  colnames(projs.train) <- c('Dist_4', paste0('Proj', c(1:2*ncol(imgpredtrain_mang_pos)))) # insert column names
+  projs.test <- data.frame(cbind(dist4.test,imgpredtest_mang_pos,imgpredtest_mang_neg)) # column combine the behavior wth the projections
+  colnames(projs.test) <- c('Dist_4', paste0('Proj', c(1:2*ncol(imgpredtest_mang_pos)))) # insert column names
   
   
   mylm <- lm('Dist_4 ~ .', data=projs.train) # behavior correlation with the number of projections
@@ -253,12 +283,14 @@ load(file=paste(output.path , "model2", toString(myfold), ".Rdata", sep='')) # l
 rows.valid <- c(1:24)
 
 
-mang.valid <- mymat[rows.valid, ]
-imgmat_mang_valid <- mang.valid %*% mymask2
+mang.valid_pos <- mymat_pos[rows.valid, ]
+mang.valid_neg <- mymat_neg[rows.valid, ]
+imgmat_mang_valid_pos <- mang.valid_pos %*% mymask2_pos
+imgmat_mang_valid_neg <- mang.valid_neg %*% mymask2_neg
 
 dist4.valid  <- behavior[rows.valid, 'd4']
 
-projs.valid <- data.frame(cbind(dist4.valid,imgmat_mang_valid))
+projs.valid <- data.frame(cbind(dist4.valid,imgmat_mang_valid_pos,imgmat_mang_valid_neg))
 colnames(projs.valid) <- c('Dist_4', paste0('Proj', c(1:ncolcombo)))
 distpred <- predict.lm(mylm, newdata=projs.valid) 
 mymodel<-lm(distpred~dist4.valid)
