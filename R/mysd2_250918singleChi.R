@@ -29,7 +29,7 @@ mynvecs <- 2 # 5 vecs is better # 10 shows ventral thalamic nuclei 10 # 50 #put 
 
 myell1 <- 1 # make this smaller 0.5, Brian says it is not what i think just switch between l0 and l1
 myits<-15 #15 #5 
-mysmooth<-1 #0.1 # 0.1 #0.01 #0  # was 0.01
+mysmooth<-0.1 #0.1 # 0.1 #0.01 #0  # was 0.01
 myclus<-250 #was 250
 
 # Load in Behavior and Imaging Data
@@ -47,7 +47,7 @@ chi_files <- list.files(path = "./mydata/imdata/", pattern = "X_to_MDT",full.nam
 
 ########################################
 #build a place to save results
-extension<-paste('sd2SINGLEChi', 'sp', toString(mysp), 'vecs', toString(mynvecs), 's', toString(mysmooth),'clus', toString(myclus), sep='') # 'JACsp0p005s0'
+extension<-paste('sd2SINGLECHI', 'sp', toString(mysp), 'vecs', toString(mynvecs), 's', toString(mysmooth),'clus', toString(myclus), sep='') # 'JACsp0p005s0'
 output.path <- paste(mypath,'/mydata/outdata_sd2/',extension, '/', sep='') #sd2_projall_noscale/'
 if (dir.exists(output.path)){ 1} else {dir.create(output.path, recursive=TRUE)}
 
@@ -180,32 +180,6 @@ for (myfold in 1:k){
   write.csv(myperf, file = paste(output.path ,extension,'distances4_pv_fold' , toString(myfold), '.csv',sep=''))
   myperf<-data.frame(c(RMSE2,myR2score[myfold],myps[myfold],myBICs[myfold], r2),row.names=c("RMSE2","R2score","p","BIC", "R2"))
   write.csv(myperf, file = paste(output.path ,extension,'distances4_stats_fold' , toString(myfold), '.csv',sep=''))
-  
-  #plot(dist4.test, distpred4, xlab = 'Real Swim Distance on Day 4', ylab = 'Predicted Swim Distance on day 4', 
-  #      main='Predicted vs. Real Swim Distance on Day 4', ylim = c(0,1200),xlim = c(0,1200)) # generate plot
-  # 
-  
-  # for ( bestpred in 1:ncol(imgpredtrain_mang)) {
-  #   cogpredtrain_mang <-behav.train$d4 %*% t(as.matrix(myeig2$eig2)[,bestpred])
-  #   cogpredtest_mang <- behav.test$d4 %*% t(as.matrix(myeig2$eig2)[,bestpred])
-  #   gvars<-paste("Proj",c(1:nrow(myeig2$eig2)),sep='',collapse='+')
-  #   projs.train <- data.frame(cbind(cogpredtrain_mang,imgpredtrain_mang)) 
-  #   colnames(projs.train) <- c('cognitive',paste0( 'Proj', c( 1:ncol(imgpredtrain_mang ) )))
-  #   projs.test <- data.frame(cbind(cogpredtest_mang, imgpredtest_mang))
-  #   colnames(projs.test) <- c('cognitive',paste0( 'Proj', c( 1:ncol(imgpredtest_mang ) )))
-  #   myform<-as.formula( paste("cognitive~",gvars,sep='') )
-  #   mylm <- lm(myform, data=projs.train) 
-  #   distpred <- bigLMStats( mylm)
-  #   cat(paste("Eig",bestpred,"is related to:\n"))
-  #   #mycog<-colnames(behav.train.mat)[ abs(myeig2$eig2[,bestpred]) > 0 ]
-  #   mycog<-colnames(behav.train)[5]
-  #   cat( mycog )
-  #   cat("\nwith weights\n")
-  #   cat( abs(myeig2$eig2[,bestpred])[ abs(myeig2$eig2[,bestpred]) > 0 ])
-  #   cat(paste("\nwith predictive correlation:", cor( cogpredtest_mang,predict(mylm,newdata=projs.test))))
-  #     }
-  
-  #gc(verbose = TRUE, reset = FALSE, full = TRUE)
   gc(verbose = TRUE, reset = FALSE)
  
   }
@@ -288,10 +262,7 @@ for (i in 1:numcols) {
 rt<-glance(cor.test(dist4.valid,distpred))
 corval[1]<-rt$estimate
 pcor[1]<-rt$p.value
-# for (i in 1:numcols){
-#   res1eig<-matrixToImages(jeanat_mang$fusedlist,mask = mask)[[i]] #eig1
-#   antsImageWrite(res1eig,paste(output.path,extension,'JoinEanat' ,as.character(i), '.nii.gz',sep=''))
-# }
+
 
 mycorsdf_eig2d4<-data.frame(rbind(pcor,corval),row.names=c("pcor","cor"))
 colnames(mycorsdf_eig2d4)<-c('total', paste0('Proj', c(1:ncolcombo)))
@@ -300,9 +271,12 @@ write.csv(mycorsdf_eig2d4, file = paste(output.path ,extension,'fold', toString(
 myperf<-data.frame(rbind(distpred,dist4.valid),row.names=c("d_predicted","d_valid"))
 write.csv(myperf, file = paste(output.path ,extension,'fold', toString(myfold), 'distances4_validsd2.csv',sep=''))
 
-myeig2_mang_valid<-sparseDecom(inmatrix = mang.valid,its = myits, cthresh=c(myclus), smooth = mysmooth, mycoption = 0, sparseness = c(mysp), nvecs = mynvecs, verbose=1, statdir=paste(output.path2))
+myeig2_mang_valid<-sparseDecom2(inmatrix = list(mang.valid,as.matrix(dist4.valid)),its = myits, cthresh=c(myclus,0), smooth = mysmooth, mycoption = 0, sparseness = c(mysp,1), nvecs = mynvecs, verbose=1, statdir=paste(output.path))
+#myeig2_mang<-sparseDecom2(inmatrix = list(mang.train,as.matrix(behav.train$d4)),its = myits, cthresh=c(myclus,0), smooth = mysmooth, mycoption = 0, sparseness = c(mysp,1), nvecs = mynvecs, verbose=1, statdir=paste(output.path))
 
-e2i_mang_valid<-matrixToImages(((myeig2_mang_valid$eigenanatomyimages)),mask = mask)
+imgmat_mang_valid<-mang.valid %*% (myeig2_mang_valid$eig1)
+
+e2i_mang_valid<-matrixToImages((t(myeig2_mang$eig1)),mask = mask)
 
 
 for (i in 1:mynvecs){
@@ -311,3 +285,63 @@ for (i in 1:mynvecs){
 
 #redo fold min or save models
 
+# #imgmat_mang_valid <- mang.valid %*% t(e2i_mang_valid) # [24,numvox] [nvecsx3,numvox]
+# projs.valid <- data.frame(cbind(dist4.valid,imgmat_mang_valid))
+# colnames(projs.valid) <- c('Dist_4', paste0('Proj', c(1:ncolcombo)))
+# distpred <- predict.lm(mylm, newdata=projs.valid) 
+# mymodel<-lm(distpred~dist4.valid)
+# RSS <- c(crossprod(mymodel$residuals))
+# MSE <- RSS / length(mymodel$residuals)
+# RMSE <- sqrt(MSE)
+# RMSE2<-sqrt(mean((distpred - dist4.valid)^2)) 
+# mysummary <-summary(mymodel)
+# r2pred <- mysummary$adj.r.squared
+# ppred <- mysummary$coefficients[2,4]
+# 
+# 
+# max(behavior$d4[1:24])
+# RMSE_valid<-RMSE2
+# BIC_valid <- BIC(mymodel)
+# R2score_valid<-myr2score(distpred,dist4.valid)
+# res_cor<-cor.test(dist4.valid,distpred)
+# 
+# myplot<- visreg(mymodel, gg=TRUE, scale='linear', plot=TRUE, xlim=c(0,max(dist4.valid)),ylim=c(0,max(dist4.valid))) 
+# myplot2<-plot(myplot,xlim=c(0,max(dist4.valid)),ylim=c(0,max(dist4.valid)))
+# ggsave(paste(output.path,extension,'newMnValidationSetFULL',toString(myfold),'sd2plainjane.pdf',sep=''), plot = last_plot(), device = 'pdf', 
+#        scale = 1, width = 4, height = 4, units = c("in"),dpi = 300)
+# myplot + theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
+#                panel.background = element_rect(fill = "transparent", colour = NA),
+#                axis.line.x = element_line(colour = 'black', size=0.5, linetype='solid'),
+#                axis.line.y = element_line(colour = 'black', size=0.5, linetype='solid'))+
+#   #xlim(0,1200)+ylim(0,1200)+coord_cartesian(xlim = c(1200, 1200),ylim = c(1200, 1200)) + coord_equal()+
+#   ggtitle(paste("RMSE=",formatC(RMSE_valid,digits=2, format="f"), 
+#                 # "R2score=",formatC(R2score_valid,digits=2, format="f"), 
+#                 # " R2=", formatC(r2pred,digits=2, format="f"), 
+#                 " p= ", formatC(ppred,digits=4, format="f"),
+#                 "  BIC=", formatC(BIC_valid,digits=2, format="f")))
+# 
+# ggsave(paste(output.path,extension,'newMnValidationSetFULL',toString(myfold),'sd2.pdf',sep=''), plot = last_plot(), device = 'pdf', 
+#        scale = 1, width = 4, height = 4, units = c("in"),dpi = 300)
+# numcols<-dim(projs.valid)[2]
+# rd4 <- t(t(dist4.valid)[rep(1,c(3*mynvecs)),])
+# pcor<-c(numcols)
+# corval<-c(numcols)
+# 
+# 
+# for (i in 1:numcols) {
+#   mypcor<-cor.test(t(dist4.valid),t(projs.valid[,i]))
+#   pcor[i]<-mypcor$p.value
+#   corval[i]<-mypcor$estimate
+# }
+# 
+# rt<-glance(cor.test(dist4.valid,distpred))
+# corval[1]<-rt$estimate
+# pcor[1]<-rt$p.value
+# 
+# 
+# mycorsdf_eig2d4<-data.frame(rbind(pcor,corval),row.names=c("pcor","cor"))
+# colnames(mycorsdf_eig2d4)<-c('total', paste0('Proj', c(1:ncolcombo)))
+# write.csv(mycorsdf_eig2d4, file = paste(output.path ,extension,'FULL', 'd4corsvalidsd2.csv',sep=''))
+# 
+# myperf<-data.frame(rbind(distpred,dist4.valid),row.names=c("d_predicted","d_valid"))
+# write.csv(myperf, file = paste(output.path ,extension,'FULL', 'distances4_validsd2.csv',sep=''))
